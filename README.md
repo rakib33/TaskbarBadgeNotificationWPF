@@ -1,4 +1,4 @@
-# TaskbarBadgeNotificationWPF
+# Taskbar Badge Notification and Task Tray Notification Alert
 
 This is wpf project to display badge on taskbar icon over .Code behind code also please check this project for MVVM approach https://github.com/thoemmi/TaskbarItemOverlay
 
