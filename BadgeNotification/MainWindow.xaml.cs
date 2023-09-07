@@ -1,4 +1,6 @@
 ﻿
+using System;
+using System.Management;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -17,6 +19,48 @@ namespace BadgeNotification
             string iconOverlayText = "1";
             notifyIconHandler = new NotifyIconHandler();
             notifyIconHandler.InitializeNotifyIcon();
+
+            #region CameraConnectDisconnectEventCatch
+            //Windows Management Instrumentation (WMI) 
+            // Define the query to monitor for device connection events
+            WqlEventQuery query = new WqlEventQuery("SELECT * FROM __InstanceOperationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_PnPEntity'");
+
+            // Create a management event watcher with the query
+            ManagementEventWatcher watcher = new ManagementEventWatcher(query);
+
+            // Attach an event handler for the event received
+            watcher.EventArrived += DeviceChangeEvent;
+
+            // Start listening for events
+            watcher.Start();
+
+            //Console.WriteLine("Monitoring for camera connection and disconnection events. Press Enter to exit.");
+            //Console.ReadLine();
+
+            // Stop listening for events when done
+            // watcher.Stop();
+            #endregion
+        }
+
+        private void DeviceChangeEvent(object sender, EventArrivedEventArgs e)
+        {
+            ManagementBaseObject instance = (ManagementBaseObject)e.NewEvent["TargetInstance"];
+
+            // Check if the event is for a USB camera
+            if (instance.Properties["PNPClass"].Value != null && instance.Properties["PNPClass"].Value.ToString().Contains("Camera"))
+            {
+                string eventType = e.NewEvent.ClassPath.ClassName;
+                string deviceName = instance.Properties["Name"].Value.ToString();
+
+                if (eventType == "__InstanceCreationEvent")
+                {
+                    Console.WriteLine($"Camera connected: {deviceName}");
+                }
+                else if (eventType == "__InstanceDeletionEvent")
+                {
+                    Console.WriteLine($"Camera disconnected: {deviceName}");
+                }
+            }
         }
 
         private void UpdateCount_Click(object sender, RoutedEventArgs e)
